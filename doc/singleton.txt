@@ -1,0 +1,171 @@
+*singleton.txt*	Uses Vim with singleton.
+
+Version: 1.0
+Author : thinca <thinca+vim@gmail.com>
+License: zlib License
+
+==============================================================================
+CONTENTS					*singleton-contents*
+
+INTRODUCTION			|singleton-introduction|
+FEATURES			|singleton-features|
+INTERFACE			|singleton-interface|
+  FUNCTIONS			  |singleton-functions|
+CUSTOMIZING			|singleton-customizing|
+  PATTERN			  |singleton-pattern|
+LIMITATION			|singleton-limitation|
+CHANGELOG			|singleton-changelog|
+
+
+
+==============================================================================
+INTRODUCTION					*singleton-introduction*
+
+*singleton* is a Vim plugin to use Vim with singleton.
+
+This plugin provides the following features.
+
+1. Avoid starting with multiplex.
+2. Diff mode support.
+3. Stdin(|--|) support.
+4. Remote edit support.
+
+See |singleton-features| for details.
+
+You just call a function in vimrc for use.
+>
+	call singleton#enable()
+<
+
+Requirements:
+- Vim 7.3 or later
+- |+clientserver|
+
+Latest version:
+https://github.com/thinca/vim-singleton
+
+
+
+==============================================================================
+FEATURES					*singleton-features*
+
+This plugin provides the following features.
+
+1. Avoid starting with multiplex.
+When you start Vim with one or more files, and other Vim has already started,
+this plugin opens the files by the existing Vim, and exits immediately.
+
+2. Diff mode support.
+If you start Vim by |vimdiff| or with |-d| option, this plugin opens the files
+by diff mode by an existing Vim.
+
+3. Stdin(|--|) support.
+When stdin is supplied to Vim, the data is sent to an existing Vim.
+
+4. Remote edit support.
+When a file that matches to specified pattern(|g:singleton#entrust_pattern|)
+was passed, this plugin opens the file by an existing Vim, and wait.  The edit
+has finished and the buffer is closed, the first Vim is terminate.
+
+
+
+==============================================================================
+INTERFACE					*singleton-interface*
+
+------------------------------------------------------------------------------
+FUNCTIONS					*singleton-functions*
+
+singleton#enable()				*singleton#enable()*
+	Enables this plugin.
+	This works only at Vim startup.
+
+singleton#is_master()				*singleton#is_master()*
+	Returns true if this Vim instance is master.
+
+singleton#get_master()				*singleton#get_master()*
+	Returns the server name of master.
+	Returns an empty string if master does not exist.
+
+singleton#set_master([{server-name}][, {val}])	*singleton#set_master()*
+	Sets a Vim as master.  The master is only one always.
+	If the argument is a string, it is {server-name}.  If omitted, set to
+	current Vim.
+	If the argument is a number, it is {val}.  Default is 1.
+	val     mean ~
+	1	Makes a master.
+	0	Stops a master.
+	-1	Never sets to master.
+
+
+
+==============================================================================
+CUSTOMIZING					*singleton-customizing*
+
+g:singleton#ignore_pattern			*g:singleton#ignore_pattern*
+	A pattern(|singleton-pattern|) for specifying the file which should
+	be ignored.
+	Default: empty
+
+g:singleton#entrust_pattern			*g:singleton#entrust_pattern*
+	A pattern(|singleton-pattern|) for specifying the file which should
+	entrust to other Vim.
+	Default: Files for Subversion, Git, Hg, and Bazaar.
+	This is large.  See the variable directly for details.
+
+g:singleton#treat_stdin				*g:singleton#treat_stdin*
+	Is whether to treat stdin.
+	Default: 1
+
+g:singleton#opener				*g:singleton#opener*
+	A command to open a buffer.
+	Default: "tab drop"
+
+g:singleton#opener_file				*g:singleton#opener_file*
+g:singleton#opener_entrust			*g:singleton#opener_entrust*
+g:singleton#opener_diff				*g:singleton#opener_diff*
+g:singleton#opener_stdin			*g:singleton#opener_stdin*
+	Specialized version of oepner for each situations.
+	If these are not defined, |g:singleton#opener| is used.
+
+g:singleton#group				*g:singleton#group*
+	Group name.  This plugin connects to same groups only.
+	Default: $USER . $USERNAME
+
+g:singleton#disable				*g:singleton#disable*
+	Disables this plugin.
+	Usually, you do not need to set this variable.
+	You can disable this plugin from command-line argument. >
+	$ vim --cmd "let g:singleton#disable=1"
+<	Default: 0
+
+------------------------------------------------------------------------------
+PATTERN						*singleton-pattern*
+
+A pattern is one of following.
+
+1. A string which is |regexp|.
+2. A list of patterns.
+   All patterns are made |regexp| and joined as |regexp|.
+3. A dictionary which has pattern as value.
+   The values as list are treated like 2.
+
+
+
+==============================================================================
+LIMITATION					*singleton-limitation*
+
+- Vim script can not know command line arguments of vim.  So, this plugin can
+  not change the behavior by these.
+  - ex: |-o| |-O| |-p| |-f| |-+| |-+/| ...
+
+
+
+==============================================================================
+CHANGELOG					*singleton-changelog*
+
+1.0	2012-02-01
+	- Initial version.
+
+
+==============================================================================
+vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl
