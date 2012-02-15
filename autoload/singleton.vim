@@ -14,7 +14,10 @@ endfunction
 
 call s:def('g:singleton#ignore_pattern', {})
 call s:def('g:singleton#entrust_pattern', {
-\   'svn': '/svn-\%(commit\|prop\)\%(\.\d\+\)\?\.tmp$',
+\   'svn': [
+\     '/svn-\%(commit\|prop\)\%(\.\d\+\)\?\.tmp$',
+\     '/\.svn/tmp/.*\.tmp$',
+\   ],
 \   'git': [
 \     '/\.git/COMMIT_EDITMSG$',
 \     '/\.git/rebase-merge/.*$',
