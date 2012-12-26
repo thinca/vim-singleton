@@ -1,6 +1,6 @@
 *singleton.txt*	Uses Vim with singleton.
 
-Version: 1.0
+Version: 1.1
 Author : thinca <thinca+vim@gmail.com>
 License: zlib License
 
@@ -162,6 +162,10 @@ LIMITATION					*singleton-limitation*
 
 ==============================================================================
 CHANGELOG					*singleton-changelog*
+
+1.1	2012-12-26
+	- Fix the timing of |remote_foreground()|.
+	- Improve default value for svn.
 
 1.0	2012-02-01
 	- Initial version.
