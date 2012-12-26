@@ -134,14 +134,14 @@ function! singleton#send(action, args)
   augroup END
   set viminfo=  " Don't save viminfo.
 
-  let expr = printf('singleton#receive(%s, %s)',
-  \                 string(a:action), string(a:args))
-  call remote_expr(server, expr)
-
   try
     call remote_foreground(server)
   catch
   endtry
+
+  let expr = printf('singleton#receive(%s, %s)',
+  \                 string(a:action), string(a:args))
+  call remote_expr(server, expr)
 
   if !has('gui_running')
     echo 'Opens at externals...'
