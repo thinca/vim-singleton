@@ -36,6 +36,8 @@ You just call a function in vimrc for use.
 >
 	call singleton#enable()
 <
+And Vim exits if given files by arguments
+were successfully passed to remote Vim.
 
 Requirements:
 - Vim 7.3 or later
@@ -109,6 +111,8 @@ g:singleton#ignore_pattern			*g:singleton#ignore_pattern*
 g:singleton#entrust_pattern			*g:singleton#entrust_pattern*
 	A pattern(|singleton-pattern|) for specifying the file which should
 	be entrusted to remote Vim.
+	It means, Vim waits until remote Vim exits.
+	This is useful to get along with version control systems.
 	Default: Files for Subversion, Git, Hg, and Bazaar.
 	This is large.  See the variable directly for details.
 
