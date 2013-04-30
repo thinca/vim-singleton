@@ -79,6 +79,8 @@ FUNCTIONS					*singleton-functions*
 
 singleton#enable()				*singleton#enable()*
 	Enables this plugin.
+	Vim exits if given files by arguments
+	were successfully passed to remote Vim.
 	This works only at Vim startup.
 
 singleton#is_master()				*singleton#is_master()*
