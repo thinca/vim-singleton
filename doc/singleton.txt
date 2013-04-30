@@ -108,7 +108,7 @@ g:singleton#ignore_pattern			*g:singleton#ignore_pattern*
 
 g:singleton#entrust_pattern			*g:singleton#entrust_pattern*
 	A pattern(|singleton-pattern|) for specifying the file which should
-	entrust to other Vim.
+	be entrusted to remote Vim.
 	Default: Files for Subversion, Git, Hg, and Bazaar.
 	This is large.  See the variable directly for details.
 
@@ -124,7 +124,7 @@ g:singleton#opener_file				*g:singleton#opener_file*
 g:singleton#opener_entrust			*g:singleton#opener_entrust*
 g:singleton#opener_diff				*g:singleton#opener_diff*
 g:singleton#opener_stdin			*g:singleton#opener_stdin*
-	Specialized version of oepner for each situations.
+	Specialized version of opener for each situation.
 	If these are not defined, |g:singleton#opener| is used.
 
 g:singleton#group				*g:singleton#group*
