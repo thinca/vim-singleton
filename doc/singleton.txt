@@ -51,8 +51,8 @@ FEATURES					*singleton-features*
 
 This plugin provides the following features.
 
-1. Avoid starting with multiplex.
-When you start Vim with one or more files, and other Vim has already started,
+1. Avoid starting with multiple Vim instances.
+When you start Vim with one or more files, and remote Vim has already started,
 this plugin opens the files by the existing Vim, and exits immediately.
 
 2. Diff mode support.
