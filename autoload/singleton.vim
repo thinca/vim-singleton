@@ -44,12 +44,14 @@ function! singleton#enable(...)
     throw 'singleton: This plugin requires +clientserver feature.'
   endif
 
+  " Avoid starting with multiple Vim instances.
   call s:set_leave()
   if singleton#get_master() ==# ''
     let s:master = 1
     return
   endif
 
+  " Stdin(:help --) support.
   let c = argc()
   if g:singleton#treat_stdin && c == 0
     augroup plugin-singleton-stdin
@@ -62,11 +64,13 @@ function! singleton#enable(...)
   " FIXME: A path that doesn't exist can not expand to fullpath.
   let files = map(argv(), 'fnamemodify(v:val, ":p")')
 
+  " Diff mode support.
   if &diff && c <= 2
     call singleton#send('diff', [files])
     return
   endif
 
+  " Remote edit support.
   let pattern = s:to_pattern(g:singleton#entrust_pattern)
   if c == 1 && s:path(files[0]) =~? pattern
     call singleton#send('entrust', [files[0]])
