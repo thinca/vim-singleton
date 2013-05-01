@@ -36,6 +36,8 @@ You just call a function in vimrc for use.
 >
 	call singleton#enable()
 <
+And Vim exits if given files by arguments
+were successfully passed to remote Vim.
 
 Requirements:
 - Vim 7.3 or later
@@ -51,8 +53,8 @@ FEATURES					*singleton-features*
 
 This plugin provides the following features.
 
-1. Avoid starting with multiplex.
-When you start Vim with one or more files, and other Vim has already started,
+1. Avoid starting with multiple Vim instances.
+When you start Vim with one or more files, and remote Vim has already started,
 this plugin opens the files by the existing Vim, and exits immediately.
 
 2. Diff mode support.
@@ -77,6 +79,7 @@ FUNCTIONS					*singleton-functions*
 
 singleton#enable()				*singleton#enable()*
 	Enables this plugin.
+	See |singleton-features| for the details.
 	This works only at Vim startup.
 
 singleton#is_master()				*singleton#is_master()*
@@ -108,7 +111,9 @@ g:singleton#ignore_pattern			*g:singleton#ignore_pattern*
 
 g:singleton#entrust_pattern			*g:singleton#entrust_pattern*
 	A pattern(|singleton-pattern|) for specifying the file which should
-	entrust to other Vim.
+	be entrusted to remote Vim.
+	It means, Vim waits until remote file is closed.
+	This is useful to get along with version control systems.
 	Default: Files for Subversion, Git, Hg, and Bazaar.
 	This is large.  See the variable directly for details.
 
@@ -124,7 +129,7 @@ g:singleton#opener_file				*g:singleton#opener_file*
 g:singleton#opener_entrust			*g:singleton#opener_entrust*
 g:singleton#opener_diff				*g:singleton#opener_diff*
 g:singleton#opener_stdin			*g:singleton#opener_stdin*
-	Specialized version of oepner for each situations.
+	Specialized version of opener for each situation.
 	If these are not defined, |g:singleton#opener| is used.
 
 g:singleton#group				*g:singleton#group*
