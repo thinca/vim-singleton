@@ -148,11 +148,11 @@ function! singleton#send(action, args)
   call remote_expr(server, expr)
 
   if !has('gui_running')
-    echo 'Opens at externals...'
+    echo 'Opening by remote Vim...'
     echo 'cancel to <C-c>'
   endif
   call s:wait()
-  echo 'Cancelled.  Startup Vim...'
+  echo 'Cancelled.  Starting up Vim...'
   call remote_expr(server, 'singleton#receive("cancel", [])')
 endfunction
 
