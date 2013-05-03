@@ -19,7 +19,7 @@ call s:def('g:singleton#entrust_pattern', {
 \     '/\.svn/tmp/.*\.tmp$',
 \   ],
 \   'git': [
-\     '/\.git/COMMIT_EDITMSG$',
+\     '/\.git/\%(modules/.\+/\)\?COMMIT_EDITMSG$',
 \     '/\.git/rebase-merge/.*$',
 \     '/\.git/.*\.diff$',
 \   ],
