@@ -145,7 +145,11 @@ function! singleton#send(action, args)
 
   let expr = printf('singleton#receive(%s, %s)',
   \                 string(a:action), string(a:args))
-  call remote_expr(server, expr)
+  let ret = remote_expr(server, expr)
+
+  if ret ==# 'ok'
+    quitall!
+  endif
 
   if !has('gui_running')
     echo 'Opening by remote Vim...'
@@ -166,13 +170,10 @@ function! s:replied(serverid)
 endfunction
 
 function! singleton#receive(cmd, args)
-  let cliendid = expand('<client>')
   stopinsert
   let ret = call('s:action_' . a:cmd, a:args)
-  if type(ret) == type('')
-    call s:server2client(cliendid, ret)
-  endif
   call foreground()
+  return ret
 endfunction
 
 function! s:action_file(files)
@@ -191,6 +192,7 @@ function! s:action_entrust(file)
     autocmd! BufWipeout <buffer> call s:finish_edit(expand('<abuf>'))
   augroup END
   redraw
+  return 'delay'
 endfunction
 
 function! s:finish_edit(bufnr)
