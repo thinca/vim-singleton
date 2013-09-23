@@ -92,7 +92,7 @@ endfunction
 
 function! singleton#get_master()
   let master = get(filter(s:serverlist(),
-  \            'remote_expr(v:val, "singleton#is_master()")'), 0, '')
+  \            's:remote_expr(v:val, "singleton#is_master()", "")'), 0, '')
   return master
 endfunction
 
@@ -109,13 +109,13 @@ function! singleton#set_master(...)
   endfor
 
   if server !=# ''
-    return remote_expr(server, printf('singleton#set_master(%d)', val))
+    return s:remote_expr(server, printf('singleton#set_master(%d)', val))
   endif
 
   if 0 < val
     if v:servername !=# '' && s:master == 0
       let master = singleton#get_master()
-      if master ==# '' || remote_expr(master, 'singleton#set_master(0)')
+      if master ==# '' || s:remote_expr(master, 'singleton#set_master(0)')
         let s:master = 1
         return 1
       endif
@@ -145,7 +145,11 @@ function! singleton#send(action, args)
 
   let expr = printf('singleton#receive(%s, %s)',
   \                 string(a:action), string(a:args))
-  let ret = remote_expr(server, expr)
+  let ret = s:remote_expr(server, expr, 'error')
+
+  if ret ==# 'error'
+    return
+  endif
 
   if ret ==# 'ok'
     quitall!
@@ -157,7 +161,7 @@ function! singleton#send(action, args)
   endif
   call s:wait()
   echo 'Cancelled.  Starting up Vim...'
-  call remote_expr(server, 'singleton#receive("cancel", [])')
+  call s:remote_expr(server, 'singleton#receive("cancel", [])')
 endfunction
 
 function! s:replied(serverid)
@@ -304,11 +308,16 @@ function! s:serverlist()
 endfunction
 
 function! s:check_id(server)
+  return s:remote_expr(a:server, 'g:singleton#group') ==# g:singleton#group
+endfunction
+
+function! s:remote_expr(server, expr, ...)
+  let default = a:0 ? a:1 : 0
   try
-    return remote_expr(a:server, 'g:singleton#group') ==# g:singleton#group
-  catch
+    return remote_expr(a:server, a:expr)
+  catch /^Vim\%((\a\+)\)\?:E241:/
   endtry
-  return 0
+  return default
 endfunction
 
 function! s:set_leave()
@@ -320,7 +329,7 @@ endfunction
 function! s:on_leave()
   if singleton#is_master()
     for s in s:serverlist()
-      if remote_expr(s, 'singleton#set_master(1)')
+      if s:remote_expr(s, 'singleton#set_master(1)')
         return
       endif
     endfor
