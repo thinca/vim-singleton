@@ -315,7 +315,7 @@ function! s:remote_expr(server, expr, ...)
   let default = a:0 ? a:1 : 0
   try
     return remote_expr(a:server, a:expr)
-  catch /^Vim\%((\a\+)\)\?:E241:/
+  catch
   endtry
   return default
 endfunction
