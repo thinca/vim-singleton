@@ -19,8 +19,9 @@ call s:def('g:singleton#entrust_pattern', {
 \     '/\.svn/tmp/.*\.tmp$',
 \   ],
 \   'git': [
+\     '/\.git/modules/',
 \     '/\.git/\%(modules/.\+/\)\?COMMIT_EDITMSG$',
-\     '/\.git/rebase-merge/.*$',
+\     '/\.git/rebase-merge/',
 \     '/\.git/.*\.diff$',
 \   ],
 \   'hg': '/hg-editor-.\{6}\.txt$',
