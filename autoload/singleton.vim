@@ -195,6 +195,7 @@ function! s:action_entrust(file)
   let s:entrust_clients[bufnr('%')] = expand('<client>')
   augroup plugin-singleton-reply
     autocmd! BufWipeout <buffer> call s:finish_edit(expand('<abuf>'))
+    autocmd! VimLeave * call s:finish_edit_all()
   augroup END
   redraw
   return 'delay'
@@ -205,6 +206,12 @@ function! s:finish_edit(bufnr)
     let client_id = remove(s:entrust_clients, a:bufnr)
     call s:server2client(client_id, 'ok')
   endif
+endfunction
+
+function! s:finish_edit_all()
+  for bufnr in keys(s:entrust_clients)
+    call s:finish_edit(bufnr)
+  endfor
 endfunction
 
 function! s:action_diff(files)
