@@ -107,6 +107,7 @@ CUSTOMIZING					*singleton-customizing*
 g:singleton#ignore_pattern			*g:singleton#ignore_pattern*
 	A pattern(|singleton-pattern|) for specifying the file which should
 	be ignored.
+	Default values are merged if the keys are absent.
 	Default: empty
 
 g:singleton#entrust_pattern			*g:singleton#entrust_pattern*
@@ -114,6 +115,7 @@ g:singleton#entrust_pattern			*g:singleton#entrust_pattern*
 	be entrusted to remote Vim.
 	It means, Vim waits until remote file is closed.
 	This is useful to get along with version control systems.
+	Default values are merged if the keys are absent.
 	Default: Files for Subversion, Git, Hg, and Bazaar.
 	This is large.  See the variable directly for details.
 

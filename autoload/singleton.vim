@@ -11,9 +11,16 @@ function! s:def(var, val)
     let {a:var} = a:val
   endif
 endfunction
+function! s:def_dict(var, val)
+  if !exists(a:var)
+    let {a:var} = a:val
+  elseif type(a:val) ==# type({})
+    call extend({a:var}, a:val, 'keep')
+  endif
+endfunction
 
-call s:def('g:singleton#ignore_pattern', {})
-call s:def('g:singleton#entrust_pattern', {
+call s:def_dict('g:singleton#ignore_pattern', {})
+call s:def_dict('g:singleton#entrust_pattern', {
 \   'svn': [
 \     '/svn-\%(commit\|prop\)\%(\.\d\+\)\?\.tmp$',
 \     '/\.svn/tmp/.*\.tmp$',
