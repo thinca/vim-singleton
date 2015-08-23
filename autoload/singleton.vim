@@ -26,6 +26,7 @@ call s:def('g:singleton#entrust_pattern', {
 \   ],
 \   'hg': '/hg-editor-.\{6}\.txt$',
 \   'bzr': '/bzr_log\..\{6}$',
+\   'yaourt': '^/tmp/yaourt-tmp-[^/]\+/',
 \ })
 call s:def('g:singleton#group', $USER . $USERNAME)
 call s:def('g:singleton#opener', 'tab drop')
