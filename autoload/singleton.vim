@@ -25,7 +25,7 @@ call s:def('g:singleton#entrust_pattern', {
 \     '/\.git/.*\.diff$',
 \   ],
 \   'hg': '/hg-editor-.\{6}\.txt$',
-\   'bar': '/bzr_log\..\{6}$',
+\   'bzr': '/bzr_log\..\{6}$',
 \ })
 call s:def('g:singleton#group', $USER . $USERNAME)
 call s:def('g:singleton#opener', 'tab drop')
