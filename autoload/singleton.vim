@@ -6,7 +6,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! s:def(var, val)
+function s:def(var, val) abort
   if !exists(a:var)
     let {a:var} = a:val
   endif
@@ -38,7 +38,7 @@ let s:master = get(s:, 'master', 0)
 
 let s:entrust_clients = {}
 
-function! singleton#enable(...)
+function singleton#enable(...) abort
   if !has('vim_starting') || g:singleton#disable
     return
   endif
@@ -88,17 +88,17 @@ function! singleton#enable(...)
   endif
 endfunction
 
-function! singleton#is_master()
+function singleton#is_master() abort
   return 0 < s:master
 endfunction
 
-function! singleton#get_master()
+function singleton#get_master() abort
   let master = get(filter(s:serverlist(),
   \            's:remote_expr(v:val, "singleton#is_master()", "")'), 0, '')
   return master
 endfunction
 
-function! singleton#set_master(...)
+function singleton#set_master(...) abort
   let server = ''
   let val = 1
   for arg in a:000
@@ -129,7 +129,7 @@ function! singleton#set_master(...)
   return 0
 endfunction
 
-function! singleton#send(action, args)
+function singleton#send(action, args) abort
   let server = singleton#get_master()
   if server ==# ''
     return
@@ -166,7 +166,7 @@ function! singleton#send(action, args)
   call s:remote_expr(server, 'singleton#receive("cancel", [])')
 endfunction
 
-function! s:replied(serverid)
+function s:replied(serverid) abort
   autocmd! plugin-singleton-wait
   let result = remote_read(a:serverid)
   if !has('gui_running')
@@ -175,14 +175,14 @@ function! s:replied(serverid)
   quitall!
 endfunction
 
-function! singleton#receive(cmd, args)
+function singleton#receive(cmd, args) abort
   stopinsert
   let ret = call('s:action_' . a:cmd, a:args)
   call foreground()
   return ret
 endfunction
 
-function! s:action_file(files)
+function s:action_file(files) abort
   for f in type(a:files) == type([]) ? a:files : [a:files]
     call s:open(f, 'file')
   endfor
@@ -190,7 +190,7 @@ function! s:action_file(files)
   return 'ok'
 endfunction
 
-function! s:action_entrust(file)
+function s:action_entrust(file) abort
   call s:open(a:file, 'entrust')
   setlocal bufhidden=wipe
   let s:entrust_clients[bufnr('%')] = expand('<client>')
@@ -202,20 +202,20 @@ function! s:action_entrust(file)
   return 'delay'
 endfunction
 
-function! s:finish_edit(bufnr)
+function s:finish_edit(bufnr) abort
   if has_key(s:entrust_clients, a:bufnr)
     let client_id = remove(s:entrust_clients, a:bufnr)
     call s:server2client(client_id, 'ok')
   endif
 endfunction
 
-function! s:finish_edit_all()
+function s:finish_edit_all() abort
   for bufnr in keys(s:entrust_clients)
     call s:finish_edit(bufnr)
   endfor
 endfunction
 
-function! s:action_diff(files)
+function s:action_diff(files) abort
   if type(a:files) != type([]) || len(a:files) < 2 || 3 < len(a:files)
     throw 'singleton: Invalid argument for diff(): ' . string(a:files)
   endif
@@ -232,7 +232,7 @@ function! s:action_diff(files)
   return 'ok'
 endfunction
 
-function! s:action_stdin(name, data)
+function s:action_stdin(name, data) abort
   let name = a:name . '@' . s:data_count
   let s:data_count += 1
   call s:open(name, 'stdin')
@@ -244,7 +244,7 @@ function! s:action_stdin(name, data)
   return 'ok'
 endfunction
 
-function! s:action_cancel()
+function s:action_cancel() abort
   " XXX: Don't support multi client.
   autocmd! plugin-singleton-reply
   echohl WarningMsg
@@ -252,7 +252,7 @@ function! s:action_cancel()
   echohl None
 endfunction
 
-function! s:wait()
+function s:wait() abort
   let c = ''
   try
     while c !=# "\<C-c>"
@@ -265,7 +265,7 @@ function! s:wait()
   endtry
 endfunction
 
-function! s:to_pattern(pat)
+function s:to_pattern(pat) abort
   if type(a:pat) == type('')
     return a:pat
   elseif type(a:pat) == type([])
@@ -276,7 +276,7 @@ function! s:to_pattern(pat)
   return ''
 endfunction
 
-function! s:bufopened(file)
+function s:bufopened(file) abort
   let f = fnamemodify(a:file, ':p')
   for tabnr in range(1, tabpagenr('$'))
     for nbuf in tabpagebuflist(tabnr)
@@ -288,7 +288,7 @@ function! s:bufopened(file)
   return 0
 endfunction
 
-function! s:open(file, type)
+function s:open(file, type) abort
   if exists('g:singleton#opener_' . a:type)
     let opener = g:singleton#opener_{a:type}
   else
@@ -298,11 +298,11 @@ function! s:open(file, type)
   execute opener '`=openfile`'
 endfunction
 
-function! s:path(path)
+function s:path(path) abort
   return simplify(substitute(a:path, '\\', '/', 'g'))
 endfunction
 
-function! s:server2client(clientid, string)
+function s:server2client(clientid, string) abort
   try
     return server2client(a:clientid, a:string)
   catch
@@ -312,15 +312,15 @@ function! s:server2client(clientid, string)
   endtry
 endfunction
 
-function! s:serverlist()
+function s:serverlist() abort
   return filter(split(serverlist(), "\n"), 's:check_id(v:val)')
 endfunction
 
-function! s:check_id(server)
+function s:check_id(server) abort
   return s:remote_expr(a:server, 'g:singleton#group') ==# g:singleton#group
 endfunction
 
-function! s:remote_expr(server, expr, ...)
+function s:remote_expr(server, expr, ...) abort
   let default = a:0 ? a:1 : 0
   try
     return remote_expr(a:server, a:expr)
@@ -329,13 +329,13 @@ function! s:remote_expr(server, expr, ...)
   return default
 endfunction
 
-function! s:set_leave()
+function s:set_leave() abort
   augroup plugin-singleton-leave
     autocmd! VimLeave * call s:on_leave()
   augroup END
 endfunction
 
-function! s:on_leave()
+function s:on_leave() abort
   if singleton#is_master()
     for s in s:serverlist()
       if s:remote_expr(s, 'singleton#set_master(1)')
