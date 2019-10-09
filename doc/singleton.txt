@@ -1,6 +1,6 @@
 *singleton.txt*	Uses Vim with singleton.
 
-Version: 1.1
+Version: 2.0.0
 Author : thinca <thinca+vim@gmail.com>
 License: zlib License
 
@@ -22,7 +22,7 @@ CHANGELOG			|singleton-changelog|
 ==============================================================================
 INTRODUCTION					*singleton-introduction*
 
-*singleton* is a Vim plugin to use Vim with singleton.
+*singleton.vim* is a Vim plugin to use Vim with singleton.
 
 This plugin provides the following features.
 
@@ -30,6 +30,11 @@ This plugin provides the following features.
 2. Diff mode support.
 3. Stdin(|--|) support.
 4. Remote edit support.
+
+And, this plugin works on some environments.
+
+1. |+clientserver|
+2. |terminal-window|
 
 See |singleton-features| for details.
 
@@ -70,6 +75,12 @@ When a file that matches to specified pattern(|g:singleton#entrust_pattern|)
 was passed, this plugin opens the file by an existing Vim, and wait.  The edit
 has finished and the buffer is closed, the first Vim is terminate.
 
+This plugin works on some environments.
+
+5. |terminal-window| support.
+When you launch Vim with one or more files in |terminal-window|, this plugin
+opens these by outside of Vim, and exits immediately.
+
 
 
 ==============================================================================
@@ -83,27 +94,15 @@ singleton#enable()				*singleton#enable()*
 	See |singleton-features| for the details.
 	This works only at Vim startup.
 
-singleton#is_master()				*singleton#is_master()*
-	Returns true if this Vim instance is master.
-
-singleton#get_master()				*singleton#get_master()*
-	Returns the server name of master.
-	Returns an empty string if master does not exist.
-
-singleton#set_master([{server-name}][, {val}])	*singleton#set_master()*
-	Sets a Vim as master.  The master is only one always.
-	If the argument is a string, it is {server-name}.  If omitted, set to
-	current Vim.
-	If the argument is a number, it is {val}.  Default is 1.
-	val     mean ~
-	1	Makes a master.
-	0	Stops a master.
-	-1	Never sets to master.
-
 
 
 ==============================================================================
 CUSTOMIZING					*singleton-customizing*
+
+------------------------------------------------------------------------------
+VARIABLES					*singleton-variables*
+
+Variables other than opener must be set before calling |singleton#enable()|.
 
 g:singleton#ignore_pattern			*g:singleton#ignore_pattern*
 	A pattern(|singleton-pattern|) for specifying the file which should

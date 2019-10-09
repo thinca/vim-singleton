@@ -3,9 +3,6 @@
 " Author : thinca <thinca+vim@gmail.com>
 " License: zlib License
 
-let s:save_cpo = &cpo
-set cpo&vim
-
 function s:def(var, val) abort
   if !exists(a:var)
     let {a:var} = a:val
@@ -33,34 +30,43 @@ call s:def('g:singleton#opener', 'tab drop')
 call s:def('g:singleton#treat_stdin', 1)
 call s:def('g:singleton#disable', 0)
 
-let s:data_count = get(s:, 'data_count', 1)
-let s:master = get(s:, 'master', 0)
-
-let s:entrust_clients = {}
 
 function singleton#enable(...) abort
   if !has('vim_starting') || g:singleton#disable
     return
   endif
-  if !has('clientserver')
-    throw 'singleton: This plugin requires +clientserver feature.'
-  endif
 
-  " Avoid starting with multiple Vim instances.
-  call s:set_leave()
-  if singleton#get_master() ==# ''
-    let s:master = 1
+  let scenes = s:available_scenes()
+  let secondaries = filter(scenes, '!v:val.is_master()')
+  if empty(secondaries)
     return
   endif
 
+  for scene in secondaries
+    let s:scene = scene
+    let is_successful = s:send_files_if_needed(scene)
+    if is_successful
+      return
+    endif
+  endfor
+endfunction
+
+function s:available_scenes() abort
+  " sorted by priority (builtin)
+  let scene_names = ['terminal', 'remote']
+  let scenes = map(scene_names, 'singleton#scene#{v:val}#get()')
+  return filter(scenes, 'v:val.is_available()')
+endfunction
+
+function s:send_files_if_needed(scene) abort
   " Stdin(:help --) support.
   let c = argc()
-  if g:singleton#treat_stdin && c == 0
+  if g:singleton#treat_stdin && c is# 0
     augroup plugin-singleton-stdin
       autocmd! StdinReadPost *
-      \        call singleton#send('stdin', ['[stdin]', getline(1, '$')])
+      \        call singleton#call_action('stdin', [getline(1, '$')])
     augroup END
-    return
+    return 1
   endif
 
   " FIXME: A path that doesn't exist can not expand to fullpath.
@@ -68,15 +74,15 @@ function singleton#enable(...) abort
 
   " Diff mode support.
   if &diff && c <= 2
-    call singleton#send('diff', [files])
-    return
+    call singleton#call_action('diff', [files])
+    return 1
   endif
 
   " Remote edit support.
   let pattern = s:to_pattern(g:singleton#entrust_pattern)
-  if c == 1 && s:path(files[0]) =~? pattern
-    call singleton#send('entrust', [files[0]])
-    return
+  if c is# 1 && s:path(files[0]) =~? pattern
+    call singleton#call_action('entrust', [files[0]])
+    return 1
   endif
 
   let pattern = s:to_pattern(g:singleton#ignore_pattern)
@@ -84,186 +90,25 @@ function singleton#enable(...) abort
     call filter(files, 's:path(v:val) !~? pattern')
   endif
   if !empty(files)
-    call singleton#send('file', [files])
-  endif
-endfunction
-
-function singleton#is_master() abort
-  return 0 < s:master
-endfunction
-
-function singleton#get_master() abort
-  let master = get(filter(s:serverlist(),
-  \            's:remote_expr(v:val, "singleton#is_master()", "")'), 0, '')
-  return master
-endfunction
-
-function singleton#set_master(...) abort
-  let server = ''
-  let val = 1
-  for arg in a:000
-    if type(arg) == type('')
-      let server = arg
-    elseif type(arg) == type(0)
-      let val = arg
-    endif
-    unlet arg
-  endfor
-
-  if server !=# ''
-    return s:remote_expr(server, printf('singleton#set_master(%d)', val))
-  endif
-
-  if 0 < val
-    if v:servername !=# '' && s:master == 0
-      let master = singleton#get_master()
-      if master ==# '' || s:remote_expr(master, 'singleton#set_master(0)')
-        let s:master = 1
-        return 1
-      endif
-    endif
-  else
-    let s:master = val
+    call singleton#call_action('file', [files])
     return 1
   endif
   return 0
 endfunction
 
-function singleton#send(action, args) abort
-  let server = singleton#get_master()
-  if server ==# ''
-    return
-  endif
+function singleton#call_action(action, args) abort
+  return s:scene.call_action(a:action, a:args)
+endfunction
 
-  augroup plugin-singleton-wait
-    autocmd! RemoteReply * call s:replied(expand('<amatch>'))
-  augroup END
-  set viminfo=  " Don't save viminfo.
-
+function singleton#_getchar() abort
   try
-    call remote_foreground(server)
-  catch
-  endtry
-
-  let expr = printf('singleton#receive(%s, %s)',
-  \                 string(a:action), string(a:args))
-  let ret = s:remote_expr(server, expr, 'error')
-
-  if ret ==# 'error'
-    return
-  endif
-
-  if ret ==# 'ok'
-    quitall!
-  endif
-
-  if !has('gui_running')
-    echo 'Opening by remote Vim...'
-    echo 'cancel to <C-c>'
-  endif
-  call s:wait()
-  echo 'Cancelled.  Starting up Vim...'
-  call s:remote_expr(server, 'singleton#receive("cancel", [])')
-endfunction
-
-function s:replied(serverid) abort
-  autocmd! plugin-singleton-wait
-  let result = remote_read(a:serverid)
-  if !has('gui_running')
-    " echo result
-  endif
-  quitall!
-endfunction
-
-function singleton#receive(cmd, args) abort
-  stopinsert
-  let ret = call('s:action_' . a:cmd, a:args)
-  call foreground()
-  return ret
-endfunction
-
-function s:action_file(files) abort
-  for f in type(a:files) == type([]) ? a:files : [a:files]
-    call s:open(f, 'file')
-  endfor
-  redraw
-  return 'ok'
-endfunction
-
-function s:action_entrust(file) abort
-  call s:open(a:file, 'entrust')
-  setlocal bufhidden=wipe
-  let s:entrust_clients[bufnr('%')] = expand('<client>')
-  augroup plugin-singleton-reply
-    autocmd! BufWipeout <buffer> call s:finish_edit(expand('<abuf>'))
-    autocmd! VimLeave * call s:finish_edit_all()
-  augroup END
-  redraw
-  return 'delay'
-endfunction
-
-function s:finish_edit(bufnr) abort
-  if has_key(s:entrust_clients, a:bufnr)
-    let client_id = remove(s:entrust_clients, a:bufnr)
-    call s:server2client(client_id, 'ok')
-  endif
-endfunction
-
-function s:finish_edit_all() abort
-  for bufnr in keys(s:entrust_clients)
-    call s:finish_edit(bufnr)
-  endfor
-endfunction
-
-function s:action_diff(files) abort
-  if type(a:files) != type([]) || len(a:files) < 2 || 3 < len(a:files)
-    throw 'singleton: Invalid argument for diff(): ' . string(a:files)
-  endif
-
-  let files = map(copy(a:files), 'fnamemodify(v:val, ":p")')
-  call s:open(files[0], 'diff')
-  diffthis
-  for f in files[1 :]
-    rightbelow vsplit `=f`
-    diffthis
-  endfor
-  " windo diffthis
-  1 wincmd w
-  return 'ok'
-endfunction
-
-function s:action_stdin(name, data) abort
-  let name = a:name . '@' . s:data_count
-  let s:data_count += 1
-  call s:open(name, 'stdin')
-  silent put =a:data
-  silent 1 delete _
-  setlocal readonly nomodified buftype=nofile
-  filetype detect
-  redraw
-  return 'ok'
-endfunction
-
-function s:action_cancel() abort
-  " XXX: Don't support multi client.
-  autocmd! plugin-singleton-reply
-  echohl WarningMsg
-  echomsg 'singleton: Operation cancelled from client.'
-  echohl None
-endfunction
-
-function s:wait() abort
-  let c = ''
-  try
-    while c !=# "\<C-c>"
-      let c = getchar()
-      if type(c) == type(0)
-        let c = nr2char(c)
-      endif
-    endwhile
+    let c = getchar()
+    return type(c) is# v:t_number ? nr2char(c) : c
   catch '^Vim:Interrupt'
+    return "\<C-c>"
   endtry
 endfunction
+
 
 function s:to_pattern(pat) abort
   if type(a:pat) == type('')
@@ -276,74 +121,6 @@ function s:to_pattern(pat) abort
   return ''
 endfunction
 
-function s:bufopened(file) abort
-  let f = fnamemodify(a:file, ':p')
-  for tabnr in range(1, tabpagenr('$'))
-    for nbuf in tabpagebuflist(tabnr)
-      if f ==# fnamemodify(bufname(nbuf), ':p')
-        return 1
-      endif
-    endfor
-  endfor
-  return 0
-endfunction
-
-function s:open(file, type) abort
-  if exists('g:singleton#opener_' . a:type)
-    let opener = g:singleton#opener_{a:type}
-  else
-    let opener = g:singleton#opener
-  endif
-  let openfile = fnamemodify(a:file, ':p')
-  execute opener '`=openfile`'
-endfunction
-
 function s:path(path) abort
   return simplify(substitute(a:path, '\\', '/', 'g'))
 endfunction
-
-function s:server2client(clientid, string) abort
-  try
-    return server2client(a:clientid, a:string)
-  catch
-    echohl ErrorMsg
-    echomsg matchstr(v:exception, '^Vim(.\{-}):\zs.*')
-    echohl None
-  endtry
-endfunction
-
-function s:serverlist() abort
-  return filter(split(serverlist(), "\n"), 's:check_id(v:val)')
-endfunction
-
-function s:check_id(server) abort
-  return s:remote_expr(a:server, 'g:singleton#group') ==# g:singleton#group
-endfunction
-
-function s:remote_expr(server, expr, ...) abort
-  let default = a:0 ? a:1 : 0
-  try
-    return remote_expr(a:server, a:expr)
-  catch
-  endtry
-  return default
-endfunction
-
-function s:set_leave() abort
-  augroup plugin-singleton-leave
-    autocmd! VimLeave * call s:on_leave()
-  augroup END
-endfunction
-
-function s:on_leave() abort
-  if singleton#is_master()
-    for s in s:serverlist()
-      if s:remote_expr(s, 'singleton#set_master(1)')
-        return
-      endif
-    endfor
-  endif
-endfunction
-
-let &cpo = s:save_cpo
-unlet s:save_cpo
