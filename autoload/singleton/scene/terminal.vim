@@ -39,6 +39,9 @@ endfunction
 function s:call(action, args) abort
   let call_args = [a:action, a:args]
   let message = json_encode(['call', 'Tapi_singleton_receive', call_args])
+  let message = substitute(message, '!', '\\u0021', 'g')
+  let message = substitute(message, '#', '\\u0023', 'g')
+  let message = substitute(message, '%', '\\u0025', 'g')
   let message = escape(message, '"')
   silent execute '!echo -e "\e]51;' . message . '\x07"'
   return s:receive_from_parent()
